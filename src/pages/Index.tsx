@@ -2,8 +2,10 @@ import { useState } from "react";
 import { TerminologySearch } from "@/components/TerminologySearch";
 import { DualCodeDisplay } from "@/components/DualCodeDisplay";
 import { ProblemListCreator } from "@/components/ProblemListCreator";
+import { ProblemListView } from "@/components/ProblemListView";
 import { AuditTrail } from "@/components/AuditTrail";
-import { TerminologyMapping } from "@/types/terminology";
+import { TerminologyMapping, FHIRCondition } from "@/types/terminology";
+import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Activity, FileSearch, FileText, History } from "lucide-react";
@@ -11,6 +13,7 @@ import { Activity, FileSearch, FileText, History } from "lucide-react";
 const Index = () => {
   const [selectedMapping, setSelectedMapping] = useState<TerminologyMapping | null>(null);
   const [showProblemListCreator, setShowProblemListCreator] = useState(false);
+  const [savedConditions, setSavedConditions] = useState<FHIRCondition[]>([]);
 
   const handleSelectMapping = (mapping: TerminologyMapping) => {
     setSelectedMapping(mapping);
@@ -21,10 +24,16 @@ const Index = () => {
     setShowProblemListCreator(true);
   };
 
-  const handleSaveCondition = (condition: any) => {
-    console.log("Saving condition:", condition);
+  const handleSaveCondition = (condition: FHIRCondition) => {
+    setSavedConditions([...savedConditions, condition]);
     setShowProblemListCreator(false);
     setSelectedMapping(null);
+    toast.success("Condition saved to problem list");
+  };
+
+  const handleDeleteCondition = (index: number) => {
+    setSavedConditions(savedConditions.filter((_, i) => i !== index));
+    toast.success("Condition removed from problem list");
   };
 
   return (
@@ -62,7 +71,7 @@ const Index = () => {
               <FileSearch className="h-4 w-4" />
               Search & Map
             </TabsTrigger>
-            <TabsTrigger value="problem-list" className="gap-2" disabled={!selectedMapping}>
+            <TabsTrigger value="problem-list" className="gap-2">
               <FileText className="h-4 w-4" />
               Problem List
             </TabsTrigger>
@@ -106,12 +115,10 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="problem-list" className="space-y-6">
-            {selectedMapping && (
-              <ProblemListCreator
-                mapping={selectedMapping}
-                onSave={handleSaveCondition}
-              />
-            )}
+            <ProblemListView 
+              conditions={savedConditions}
+              onDelete={handleDeleteCondition}
+            />
           </TabsContent>
 
           <TabsContent value="audit" className="space-y-6">
