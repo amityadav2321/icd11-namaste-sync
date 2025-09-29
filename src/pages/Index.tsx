@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { TerminologySearch } from "@/components/TerminologySearch";
-import { DualCodeDisplay } from "@/components/DualCodeDisplay";
 import { ProblemListCreator } from "@/components/ProblemListCreator";
 import { ProblemListView } from "@/components/ProblemListView";
 import { AuditTrail } from "@/components/AuditTrail";
@@ -8,19 +7,21 @@ import { TerminologyMapping, FHIRCondition } from "@/types/terminology";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Activity, FileSearch, FileText, History } from "lucide-react";
+import { Activity, FileSearch, FileText, History, Import } from "lucide-react";
 
 const Index = () => {
   const [selectedMapping, setSelectedMapping] = useState<TerminologyMapping | null>(null);
   const [showProblemListCreator, setShowProblemListCreator] = useState(false);
   const [savedConditions, setSavedConditions] = useState<FHIRCondition[]>([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Toggle function
+  const handleToggle = () => {
+    setIsLoggedIn(!isLoggedIn);
+  };
 
   const handleSelectMapping = (mapping: TerminologyMapping) => {
     setSelectedMapping(mapping);
-    setShowProblemListCreator(false);
-  };
-
-  const handleAddToProblemList = () => {
     setShowProblemListCreator(true);
   };
 
@@ -37,100 +38,109 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card shadow-card">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 animate-gradient">
+      <div className="bg-background/80 backdrop-blur-lg min-h-screen flex flex-col">
+        {/* Header */}
+        <header className="border-b bg-card/70 backdrop-blur-md shadow-lg">
+          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-pink-500 bg-clip-text text-transparent">
                 NAMASTE ↔ ICD-11 Terminology Service
               </h1>
               <p className="text-sm text-muted-foreground">
                 FHIR R4 Compliant | India EHR Standards 2016
               </p>
             </div>
+
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-xs">
-                <Activity className="mr-1 h-3 w-3" />
-                OAuth 2.0 ABHA
+              <Badge variant="outline" className="text-xs flex cursor-pointer items-center">
+                <Activity className="mr-1 h-3 w-3 " /> OAuth 2.0 ABHA
               </Badge>
-              <Badge variant="outline" className="text-xs font-mono">
-                v1.0.0-alpha
-              </Badge>
+              <Badge variant="outline" className="text-xs cursor-pointer font-mono">v1.0.0-alpha</Badge>
+              <button
+                onClick={handleToggle}
+                className="px-4 py-1 bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-semibold rounded-lg shadow hover:scale-105 transition-transform duration-200"
+              >
+                {isLoggedIn ? "Logout" : "Login"}
+              </button>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="search" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:w-[600px]">
-            <TabsTrigger value="search" className="gap-2">
-              <FileSearch className="h-4 w-4" />
-              Search & Map
-            </TabsTrigger>
-            <TabsTrigger value="problem-list" className="gap-2">
-              <FileText className="h-4 w-4" />
-              Problem List
-            </TabsTrigger>
-            <TabsTrigger value="audit" className="gap-2">
-              <History className="h-4 w-4" />
-              Audit Trail
-            </TabsTrigger>
-          </TabsList>
+        {/* Main Content */}
+        <main className="container mx-auto px-4 py-8 flex-1">
+          <Tabs defaultValue="search" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-3 lg:w-[600px]">
+              <TabsTrigger value="search" className="gap-2">
+                <FileSearch className="h-4 w-4" /> Search
+              </TabsTrigger>
+              <TabsTrigger value="problem-list" className="gap-2">
+                <FileText className="h-4 w-4" /> Problem List
+              </TabsTrigger>
+              <TabsTrigger value="audit" className="gap-2">
+                <History className="h-4 w-4" /> Audit Trail
+              </TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="search" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="space-y-6">
-                <TerminologySearch onSelectMapping={handleSelectMapping} />
-              </div>
-              <div>
-                {selectedMapping && !showProblemListCreator && (
-                  <DualCodeDisplay
-                    mapping={selectedMapping}
-                    onAddToProblemList={handleAddToProblemList}
-                  />
-                )}
-                {showProblemListCreator && selectedMapping && (
-                  <ProblemListCreator
-                    mapping={selectedMapping}
-                    onSave={handleSaveCondition}
-                    onCancel={() => setShowProblemListCreator(false)}
-                  />
-                )}
-                {!selectedMapping && (
-                  <div className="h-full flex items-center justify-center p-8 border-2 border-dashed rounded-lg">
-                    <div className="text-center space-y-2">
-                      <FileSearch className="h-12 w-12 mx-auto text-muted-foreground" />
-                      <p className="text-muted-foreground">
-                        Search for a NAMASTE term to view dual-code mapping
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </TabsContent>
+            {/* Search Tab */}
+        <TabsContent value="search" className="space-y-6">
+  <div className="flex flex-col lg:flex-row gap-8 items-stretch">
+    
+    
+    {/* Left: Search Box */}
+<div className="flex-1">
+  <TerminologySearch onSelectMapping={handleSelectMapping} />
 
-          <TabsContent value="problem-list" className="space-y-6">
-            <ProblemListView 
-              conditions={savedConditions}
-              onDelete={handleDeleteCondition}
-            />
-          </TabsContent>
+  {/* Placeholder content when nothing is selected */}
+  {!showProblemListCreator && !selectedMapping && (
+    <div className="mt-6 p-6 border rounded-lg bg-card/50 text-muted-foreground text-center">
+      <p className="mb-2 font-semibold">Start typing to search terminologies</p>
+      <p className="text-sm">
+        You can search for conditions, diseases, or medical concepts.
+      </p>
+      <p className="text-xs mt-2">Popular searches: Jwara, Sandhivata, Vata Vyadhi</p>
+    </div>
+  )}
 
-          <TabsContent value="audit" className="space-y-6">
-            <AuditTrail />
-          </TabsContent>
-        </Tabs>
-      </main>
+  {showProblemListCreator && selectedMapping && (
+    <ProblemListCreator
+      mapping={selectedMapping}
+      onSave={handleSaveCondition}
+      onCancel={() => setShowProblemListCreator(false)}
+    />
+  )}
+</div>
 
-      {/* Footer */}
-      <footer className="border-t mt-12 py-6">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-muted-foreground">
+
+    {/* Right: Doctor Illustration */}
+    <div className="flex-1  flex justify-center items-center">
+      <img
+        src="/Doctor.png"
+        alt="Doctor"
+        className="rounded-xl shadow-lg object-contain w-full max-h-[500px]"
+      />
+    </div>
+    
+  </div>
+</TabsContent>
+
+
+
+
+
+            <TabsContent value="problem-list">
+              <ProblemListView conditions={savedConditions} onDelete={handleDeleteCondition} />
+            </TabsContent>
+
+            <TabsContent value="audit">
+              <AuditTrail />
+            </TabsContent>
+          </Tabs>
+        </main>
+
+        {/* Footer */}
+        <footer className="border-t mt-12 py-6 bg-card/70 backdrop-blur-md">
+          <div className="container mx-auto px-4 text-sm text-muted-foreground grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <h4 className="font-semibold text-foreground mb-2">Standards Compliance</h4>
               <ul className="space-y-1">
@@ -157,8 +167,8 @@ const Index = () => {
               </p>
             </div>
           </div>
-        </div>
-      </footer>
+        </footer>
+      </div>
     </div>
   );
 };
